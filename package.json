@@ -10,12 +10,13 @@
   },
   "dependencies": {
     "@google/genai": "^1.13.0",
-    "react-dom": "^19.1.1",
     "react": "^19.1.1",
-    "@react-three/drei": "^10.6.1",
-    "@react-three/fiber": "^9.3.0",
+    "@react-three/drei": "^9.102.6",
+    "@react-three/fiber": "^8.15.11",
     "three": "^0.179.1",
-    "lucide-react": "0.395.0"
+    "three-csg-ts": "^3.2.0",
+    "lucide-react": "0.395.0",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
