@@ -36,7 +36,7 @@ export default {
     const fallback=()=>json({model:applyInstruction(data.prompt,current),mode:'local',note:'Local CAD rules used — AI quota or service unavailable'});
     if(!env.AI) return fallback();
     try {
-      const response=await env.AI.run('@cf/meta/llama-3.1-8b-instruct',{
+      const response=await env.AI.run('@cf/meta/llama-3.1-8b-instruct-fp8',{
         messages:[
           {role:'system',content:SYSTEM},
           {role:'user',content:JSON.stringify({currentModel:current,instruction:data.prompt})}

@@ -32,15 +32,33 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify Cloudflare credentials
+        run: |
+          test -n "$CF_API_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN secret"; exit 1; }
+          test -n "$CF_ACCOUNT_ID" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID secret"; exit 1; }
       - run: npm install --no-audit --no-fund
       - run: npm run build
       - name: Deploy to Cloudflare Workers
-        if: env.CF_API_TOKEN != '' && env.CF_ACCOUNT_ID != ''
+        id: publish
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-      - name: Deployment credentials missing
-        if: env.CF_API_TOKEN == '' || env.CF_ACCOUNT_ID == ''
-        run: echo "::warning::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets to enable deployment."
+      - name: Verify production endpoints
+        env:
+          DEPLOYMENT_URL: ${{ steps.publish.outputs.deployment-url }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOYMENT_URL" || { echo "::error::Deployment URL was not returned by Wrangler"; exit 1; }
+          echo "Production URL: $DEPLOYMENT_URL"
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$DEPLOYMENT_URL/api/health" -o health.json
+          node -e 'const h=require("./health.json"); if(h.ok!==true||h.cloudflare!==true||h.service!=="aethercad")process.exit(1); console.log("Health OK: Cloudflare Worker API");'
+          curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$DEPLOYMENT_URL/" -o site.html
+          grep -q 'AetherCAD' site.html
+          echo "HTML OK: AetherCAD frontend"
+          echo "### AetherCAD deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live site: $DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Worker API health and frontend HTML both verified." >> "$GITHUB_STEP_SUMMARY"
