@@ -1,5 +1,0 @@
-{
-  "description": "AetherCAD: A conversational CAD tool to generate and modify 3D models using natural language prompts, powered by the Gemini API.",
-  "requestFramePermissions": [],
-  "name": "App"
-}
